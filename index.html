@@ -380,7 +380,7 @@ if(overlayData.length&&showOverlay){ot.style.display='';ol.style.display='';rend
 // Update search count
 if(searchTerm){const total=allData().filter(d=>matchesSearch(d)).length;document.getElementById('searchCount').textContent=total+' match'+(total!==1?'es':'');} else{document.getElementById('searchCount').textContent='';}}
 
-function renderList(data,el){let h='<div class="list-row list-header"><span>Customer</span><span>City</span><span>Zip</span><span>FYTD</span><span>Territory</span></div>';
+function renderList(data,el){let h='<div class="list-row list-header"><span>Customer</span><span>City</span><span>Zip</span><span>FYTD</span><span style="display:flex;justify-content:space-between;align-items:center">Territory<button class="btn btn-sm btn-export" style="padding:2px 8px;font-size:10px" onclick="exportFiltered()">Export</button></span></div>';
 let flt=[...data];
 if(searchTerm)flt=flt.filter(d=>matchesSearch(d));
 if(viewSelected.size>0)flt=flt.filter(d=>{const tId=assignments[acctKey(d)];return tId?viewSelected.has(tId):viewSelected.has('_u');});
@@ -769,6 +769,23 @@ function updateLocateBtn(){
   else{btn.className='btn btn-sm btn-locate';btn.innerHTML='\u25CE My location';}
 }
 
+
+function exportFiltered(){
+  const ad=allData();
+  let flt=[...ad];
+  if(searchTerm)flt=flt.filter(d=>matchesSearch(d));
+  if(viewSelected.size>0)flt=flt.filter(d=>{const tId=assignments[acctKey(d)];return tId?viewSelected.has(tId):viewSelected.has('_u');});
+  if(flt.length===0){alert('No accounts to export.');return;}
+  flt.sort((a,b)=>b.totalSales-a.totalSales);
+  const hasLK=flt.some(d=>d.legacyKey);const hasBI=flt.some(d=>d.billingAccts&&d.billingAccts.length);const hasSales=flt.some(d=>d.totalSales);const hasPhone=flt.some(d=>d.phone);const hasEmpR=flt.some(d=>d.empResp);
+  const header=['Account Number'];if(hasLK)header.push('Legacy Key');if(hasBI)header.push('Account #2');header.push('Customer','Address','City','Zip Code');if(hasSales)header.push('FYTD Sales');if(hasPhone)header.push('Phone');if(hasEmpR)header.push('Employee Responsible');header.push('Territory');
+  const rows=[header];
+  flt.forEach(d=>{const t=getTerritory(assignments[acctKey(d)]);
+    const row=[d.acctNum||d.custId||''];if(hasLK)row.push(d.legacyKey||'');if(hasBI)row.push(d.billingAccts[0]||'');row.push(d.customer,d.address,d.city,d.zip);if(hasSales)row.push(d.totalSales);if(hasPhone)row.push(d.phone||'');if(hasEmpR)row.push(d.empResp||'');row.push(t?terrDisplayName(t.name):'Unassigned');rows.push(row);});
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=header.map(h=>({wch:Math.max(h.length+4,14)}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Filtered Accounts');
+  XLSX.writeFile(wb,'Filtered_Accounts.xlsx');
+}window.exportFiltered=exportFiltered;
 loadState();masterData.forEach(d=>{d._layer='master';});overlayData.forEach(d=>{d._layer='overlay';});rebuildMarkers();fitMapToData();updateAll();
 
 function resetAll(){if(!confirm('This will restore all defaults. Are you sure?'))return;masterData=JSON.parse(JSON.stringify(DEFAULT_ACCOUNTS));masterData.forEach(d=>{d._layer='master';});overlayData=[];territories=JSON.parse(JSON.stringify(DEFAULT_TERRITORIES));assignments=JSON.parse(JSON.stringify(DEFAULT_ASSIGNMENTS));nextTId=DEFAULT_NEXT_TID;mode=null;overlaySaved=false;try{localStorage.removeItem(SK);}catch(e){}rebuildMarkers();updateAll();}window.resetAll=resetAll;

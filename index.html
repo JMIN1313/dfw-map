@@ -133,7 +133,7 @@ header{margin-bottom:16px;display:flex;justify-content:space-between;align-items
 </div>
 </header>
 <div class="search-bar" id="searchBar" style="display:none">
-<input type="text" id="searchInput" placeholder="Search by customer, city, or territory..." oninput="doSearch()"/>
+<input type="text" id="searchInput" placeholder="Search by customer, street, city, or territory..." oninput="doSearch()"/>
 <span class="search-count" id="searchCount"></span>
 <button class="search-clear" onclick="clearSearch()">Clear</button>
 </div>
@@ -144,7 +144,7 @@ header{margin-bottom:16px;display:flex;justify-content:space-between;align-items
 <div class="lasso-banner" id="lassoBanner" style="display:none"></div>
 <div id="map"></div>
 <div class="view-bar" id="viewBar"></div>
-<div class="legend" id="legendBar"></div>
+<div class="legend" id="legendBar" style="display:none"></div>
 <div class="stats-grid" id="statsGrid"></div>
 <div class="action-row" id="actionRow"></div>
 
@@ -365,7 +365,7 @@ let searchTerm='';
 function doSearch(){searchTerm=document.getElementById('searchInput').value.toLowerCase().trim();renderLists();highlightSearchOnMap();}window.doSearch=doSearch;
 function clearSearch(){document.getElementById('searchInput').value='';searchTerm='';renderLists();highlightSearchOnMap();}window.clearSearch=clearSearch;
 
-function matchesSearch(d){if(!searchTerm)return true;return d.customer.toLowerCase().includes(searchTerm)||d.city.toLowerCase().includes(searchTerm)||(d.empResp&&d.empResp.toLowerCase().includes(searchTerm))||(function(){const t=getTerritory(assignments[acctKey(d)]);return t&&t.name.toLowerCase().includes(searchTerm);}());}
+function matchesSearch(d){if(!searchTerm)return true;return d.customer.toLowerCase().includes(searchTerm)||d.city.toLowerCase().includes(searchTerm)||d.address.toLowerCase().includes(searchTerm)||(d.empResp&&d.empResp.toLowerCase().includes(searchTerm))||(function(){const t=getTerritory(assignments[acctKey(d)]);return t&&t.name.toLowerCase().includes(searchTerm);}());}
 
 function highlightSearchOnMap(){
   if(!searchTerm){mapMarkers.forEach(m=>{const op=mOp(m.data);m.marker.setStyle({fillOpacity:op,opacity:op});});return;}
